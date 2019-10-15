@@ -12,6 +12,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 public class MyWorker  extends Worker {
+    public static final String TASK_DESC= "task_desc";
 
     public MyWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -24,7 +25,14 @@ public class MyWorker  extends Worker {
         Data data = getInputData();
         String desc = data.getString(MainActivity.KEY_TASK_DESC);
         Log.d("Sended Data",desc);
-        displayNotification("My Worker", "Hey I finished my work");
+        displayNotification("My Worker", desc);
+
+        //setting output data
+        Data outData = new Data.Builder()
+                .putString(TASK_DESC, "The conclusion of the task")
+                .build();
+
+        setOutputData(outData);
         return Result.SUCCESS;
     }
 

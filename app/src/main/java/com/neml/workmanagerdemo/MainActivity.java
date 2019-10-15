@@ -2,6 +2,7 @@ package com.neml.workmanagerdemo;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
+import androidx.work.Constraints;
 import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
@@ -13,6 +14,7 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     public static final String KEY_TASK_DESC ="key";
+    public static final String KEY_TASK_OUTPUT ="task_desc";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,13 +22,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Data data = new Data.Builder()
-                .putString(KEY_TASK_DESC,"Sample Data")
+                .putString(KEY_TASK_DESC,"This is Input Data send from Activity")
                 .build();
-        final OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(MyWorker.class).setInputData(data).build();
-    //OneTimeWorkRequest: Used when we want to perform the work only once.
-    //PeriodicWorkRequest: Used when we need to perform the task periodically.
-        //A click listener for the button
-        //inside the onClick method we will perform the work
+
+        //creating constraints
+        Constraints constraints = new Constraints.Builder()
+                .setRequiresCharging(true) // you can add as many constraints as you want
+                .build();
+
+        final OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(MyWorker.class)
+                .setInputData(data)
+                .setConstraints(constraints)
+                .build();
 
         findViewById(R.id.buttonEnqueue).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -44,9 +51,23 @@ public class MainActivity extends AppCompatActivity {
                 .observe(this, new Observer<WorkInfo>() {
                     @Override
                     public void onChanged(WorkInfo workInfo) {
-                        String status =  workInfo.getState().name();
-                        textView.append(status + "\n");
+                        if(workInfo!=null){
+                            if(workInfo.getState().isFinished()){
+                                Data data = workInfo.getOutputData();
+                                String str= data.getString(MyWorker.TASK_DESC);
+                                textView.append(str + "\n");
+                            }
+                            String status =  workInfo.getState().name();
+                            textView.append(status + "\n");
+                        }
+
                     }
                 });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        WorkManager.getInstance().cancelAllWork();//pass workRequest ID to cancel WorkManger
     }
 }
