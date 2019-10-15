@@ -3,9 +3,11 @@ package com.neml.workmanagerdemo;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -19,6 +21,9 @@ public class MyWorker  extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        Data data = getInputData();
+        String desc = data.getString(MainActivity.KEY_TASK_DESC);
+        Log.d("Sended Data",desc);
         displayNotification("My Worker", "Hey I finished my work");
         return Result.SUCCESS;
     }
